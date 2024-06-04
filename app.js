@@ -10,7 +10,6 @@ document.getElementById('submit').addEventListener('click', async () => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('language', 'por'); // Definindo o idioma para Português
-    formData.append('apikey', 'helloworld'); // API key de demonstração do OCR.Space
 
     const ocrUrl = 'https://api.ocr.space/parse/image';
 

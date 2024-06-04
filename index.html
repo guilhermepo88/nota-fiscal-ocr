@@ -13,6 +13,9 @@
 </select>
 <button id="submit">Enviar</button>
 
+<!-- Adicione o script do Google Cloud Vision aqui -->
+<script src="https://apis.google.com/js/platform.js"></script>
+
 <script>
 document.getElementById('submit').addEventListener('click', async () => {
     const fileInput = document.getElementById('upload');
@@ -42,10 +45,7 @@ async function resizeImage(file, orientation) {
 
 async function performOCR(imageFile) {
     // Criar uma instância do cliente do Google Cloud Vision
-    const vision = require('@google-cloud/vision');
-    const client = new vision.ImageAnnotatorClient({
-        key: 'AIzaSyBzTob-Dl2h_jzpF1cFs7aAC62WG6tK3AM' // Substitua pela sua chave da API
-    });
+    const client = new google.cloud.vision.ImageAnnotatorClient();
 
     // Ler o conteúdo da imagem
     const content = await readFile(imageFile);

@@ -7,8 +7,13 @@ document.getElementById('submit').addEventListener('click', async () => {
         return;
     }
 
+    const orientation = document.getElementById('orientation').value;
+
+    // Redimensionar a imagem de acordo com a orientação selecionada
+    const resizedFile = await resizeImage(file, orientation);
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', resizedFile);
     formData.append('language', 'por'); // Definindo o idioma para Português
 
     const ocrUrl = 'https://api.ocr.space/parse/image';
@@ -35,20 +40,48 @@ document.getElementById('submit').addEventListener('click', async () => {
     }
 });
 
-async function sendToGoogleSheets(data) {
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwL7VvW51P_50iMCZTMEQFsWuteeWmgAXIzdcqn4CVzECQPSwtyL4ePQKx9eUwhd5_Eew/exec';
-    
-    const response = await fetch(scriptUrl, {
-        method: 'POST',
-        body: JSON.stringify({ text: data }),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    });
+async function resizeImage(file, orientation) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
 
-    if (response.ok) {
-        alert('Dados enviados com sucesso!');
-    } else {
-        alert('Erro ao enviar dados.');
-    }
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 600;
+                let width = img.width;
+                let height = img.height;
+
+                // Redimensionar a imagem com base na orientação
+                if (orientation === 'horizontal' && width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else if (orientation === 'vertical' && height > width) {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    const resizedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    resolve(resizedFile);
+                }, 'image/jpeg', 0.7);
+            };
+            img.src = event.target.result;
+        };
+
+        reader.readAsDataURL(file);
+    });
 }

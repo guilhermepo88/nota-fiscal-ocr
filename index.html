@@ -44,7 +44,7 @@ async function performOCR(imageFile) {
     // Criar uma instância do cliente do Google Cloud Vision
     const vision = require('@google-cloud/vision');
     const client = new vision.ImageAnnotatorClient({
-        keyFilename: 'path/to/your/credentials.json' // Substitua pelo caminho do seu arquivo de credenciais
+        key: 'AIzaSyBzTob-Dl2h_jzpF1cFs7aAC62WG6tK3AM' // Substitua pela sua chave da API
     });
 
     // Ler o conteúdo da imagem

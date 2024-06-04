@@ -1,18 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captura de Nota Fiscal</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCR com Google Cloud Vision</title>
 </head>
 <body>
-    <h1>Captura de Nota Fiscal</h1>
-    <select id="orientation">
-        <option value="horizontal">Horizontal</option>
-        <option value="vertical">Vertical</option>
-    </select>
-    <input type="file" accept="image/*" id="upload" capture="environment">
-    <button id="submit">Enviar</button>
-    <script src="app.js"></script>
+<input type="file" id="upload">
+<select id="orientation">
+<option value="horizontal">Horizontal</option>
+<option value="vertical">Vertical</option>
+</select>
+<button id="submit">Enviar</button>
+
+<script>
+document.getElementById('submit').addEventListener('click', async () => {
+    const fileInput = document.getElementById('upload');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('Por favor, selecione uma imagem.');
+        return;
+    }
+
+    const orientation = document.getElementById('orientation').value;
+
+    // Redimensionar a imagem de acordo com a orientação selecionada
+    const resizedFile = await resizeImage(file, orientation);
+
+    // Fazer OCR da imagem usando a API do Google Cloud Vision
+    const extractedText = await performOCR(resizedFile);
+
+    // Função para enviar os dados ao Google Sheets
+    sendToGoogleSheets(extractedText);
+});
+
+async function resizeImage(file, orientation) {
+    // Implemente a função de redimensionamento da imagem aqui (se necessário)
+    return file;
+}
+
+async function performOCR(imageFile) {
+    // Criar uma instância do cliente do Google Cloud Vision
+    const vision = require('@google-cloud/vision');
+    const client = new vision.ImageAnnotatorClient({
+        keyFilename: 'path/to/your/credentials.json' // Substitua pelo caminho do seu arquivo de credenciais
+    });
+
+    // Ler o conteúdo da imagem
+    const content = await readFile(imageFile);
+
+    // Fazer uma solicitação para a API do Google Cloud Vision para realizar o OCR da imagem
+    const [result] = await client.textDetection(content);
+    const detections = result.textAnnotations;
+    const extractedText = detections[0].description;
+
+    return extractedText;
+}
+
+async function readFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
+
+async function sendToGoogleSheets(data) {
+    // Implemente a função de envio para o Google Sheets aqui (se necessário)
+    console.log('Texto extraído:', data);
+    alert('Texto extraído: ' + data);
+}
+</script>
 </body>
 </html>

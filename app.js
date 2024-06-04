@@ -1,45 +1,3 @@
-document.getElementById('submit').addEventListener('click', async () => {
-    const fileInput = document.getElementById('upload');
-    const file = fileInput.files[0];
-
-    if (!file) {
-        alert('Por favor, selecione uma imagem.');
-        return;
-    }
-
-    const orientation = document.getElementById('orientation').value;
-
-    // Redimensionar a imagem de acordo com a orientação selecionada
-    const resizedFile = await resizeImage(file, orientation);
-
-    const formData = new FormData();
-    formData.append('file', resizedFile);
-    formData.append('language', 'por'); // Definindo o idioma para Português
-
-    const ocrUrl = 'https://api.ocr.space/parse/image';
-
-    try {
-        const response = await fetch(ocrUrl, {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (data.OCRExitCode !== 1) {
-            alert('Erro ao processar a imagem: ' + data.ErrorMessage);
-            return;
-        }
-
-        const extractedText = data.ParsedResults[0].ParsedText;
-
-        // Função para enviar os dados ao Google Sheets
-        sendToGoogleSheets(extractedText);
-    } catch (error) {
-        alert('Erro ao processar a imagem: ' + error.message);
-    }
-});
-
 async function resizeImage(file, orientation) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -52,6 +10,9 @@ async function resizeImage(file, orientation) {
                 let width = img.width;
                 let height = img.height;
 
+                console.log("Original Width:", width);
+                console.log("Original Height:", height);
+
                 // Redimensionar a imagem com base na orientação
                 if (orientation === 'horizontal' && width > height) {
                     if (width > MAX_WIDTH) {
@@ -63,7 +24,14 @@ async function resizeImage(file, orientation) {
                         width *= MAX_HEIGHT / height;
                         height = MAX_HEIGHT;
                     }
+                } else {
+                    console.error("Erro: A orientação da imagem não corresponde à seleção.");
+                    reject("Erro: A orientação da imagem não corresponde à seleção.");
+                    return;
                 }
+
+                console.log("Novo Width:", width);
+                console.log("Novo Height:", height);
 
                 const canvas = document.createElement('canvas');
                 canvas.width = width;
@@ -80,6 +48,11 @@ async function resizeImage(file, orientation) {
                 }, 'image/jpeg', 0.7);
             };
             img.src = event.target.result;
+        };
+
+        reader.onerror = function(error) {
+            console.error("Erro ao ler o arquivo:", error);
+            reject("Erro ao ler o arquivo.");
         };
 
         reader.readAsDataURL(file);

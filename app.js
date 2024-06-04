@@ -14,26 +14,30 @@ document.getElementById('submit').addEventListener('click', async () => {
 
     const ocrUrl = 'https://api.ocr.space/parse/image';
 
-    const response = await fetch(ocrUrl, {
-        method: 'POST',
-        body: formData
-    });
+    try {
+        const response = await fetch(ocrUrl, {
+            method: 'POST',
+            body: formData
+        });
 
-    const data = await response.json();
+        const data = await response.json();
 
-    if (data.OCRExitCode !== 1) {
-        alert('Erro ao processar a imagem.');
-        return;
+        if (data.OCRExitCode !== 1) {
+            alert('Erro ao processar a imagem: ' + data.ErrorMessage);
+            return;
+        }
+
+        const extractedText = data.ParsedResults[0].ParsedText;
+
+        // Função para enviar os dados ao Google Sheets
+        sendToGoogleSheets(extractedText);
+    } catch (error) {
+        alert('Erro ao processar a imagem: ' + error.message);
     }
-
-    const extractedText = data.ParsedResults[0].ParsedText;
-
-    // Função para enviar os dados ao Google Sheets
-    sendToGoogleSheets(extractedText);
 });
 
 async function sendToGoogleSheets(data) {
-    const scriptUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwL7VvW51P_50iMCZTMEQFsWuteeWmgAXIzdcqn4CVzECQPSwtyL4ePQKx9eUwhd5_Eew/exec';
     
     const response = await fetch(scriptUrl, {
         method: 'POST',

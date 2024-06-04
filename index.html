@@ -13,9 +13,7 @@
 </select>
 <button id="submit">Enviar</button>
 
-<!-- Adicione o script do Google Cloud Vision aqui -->
-<script src="https://www.gstatic.com/cloud-site-ux/vision.js"></script>
-
+<!-- Adicione o script do Google Apps Script aqui -->
 <script>
 document.getElementById('submit').addEventListener('click', async () => {
     const fileInput = document.getElementById('upload');
@@ -31,11 +29,8 @@ document.getElementById('submit').addEventListener('click', async () => {
     // Redimensionar a imagem de acordo com a orientação selecionada
     const resizedFile = await resizeImage(file, orientation);
 
-    // Fazer OCR da imagem usando a API do Google Cloud Vision
-    const extractedText = await performOCR(resizedFile);
-
-    // Função para enviar os dados ao Google Sheets
-    sendToGoogleSheets(extractedText);
+    // Chamar a função do lado do servidor para fazer o OCR da imagem
+    google.script.run.withSuccessHandler(sendToGoogleSheets).performOCR(resizedFile);
 });
 
 async function resizeImage(file, orientation) {
@@ -43,34 +38,10 @@ async function resizeImage(file, orientation) {
     return file;
 }
 
-async function performOCR(imageFile) {
-    // Criar uma instância do cliente do Google Cloud Vision
-    const client = new vision.ImageAnnotatorClient();
-
-    // Ler o conteúdo da imagem
-    const content = await readFile(imageFile);
-
-    // Fazer uma solicitação para a API do Google Cloud Vision para realizar o OCR da imagem
-    const [result] = await client.textDetection(content);
-    const detections = result.textAnnotations;
-    const extractedText = detections[0].description;
-
-    return extractedText;
-}
-
-async function readFile(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => resolve(event.target.result);
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
-    });
-}
-
-async function sendToGoogleSheets(data) {
+function sendToGoogleSheets(extractedText) {
     // Implemente a função de envio para o Google Sheets aqui (se necessário)
-    console.log('Texto extraído:', data);
-    alert('Texto extraído: ' + data);
+    console.log('Texto extraído:', extractedText);
+    alert('Texto extraído: ' + extractedText);
 }
 </script>
 </body>
